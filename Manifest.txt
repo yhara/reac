@@ -1,0 +1,12 @@
+README.rdoc
+lib/reac/reactivize.rb
+lib/reac/view/curses.rb
+lib/reac/view/sdl.rb
+lib/reac/view.rb
+lib/reac.rb
+sample/clock.rb
+sample/icon.bmp
+sample/reacirb.rb
+sample/sample.rb
+sample/sdltest.rb
+sample/ttf.ttf
