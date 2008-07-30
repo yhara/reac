@@ -6,6 +6,10 @@ require 'reac/reactivize.rb'
 require 'reac/view.rb'
 
 class Reac
+  self.instance_methods.each do |m|
+    undef_method(m) unless ["__send__", "__id__"].include?(m.to_s)
+  end
+
   attr_accessor :last_update
 
   # construct tree of Reac::*
@@ -42,13 +46,20 @@ class Reac
       reac.data = reac.proc.call
     when Array
       reac.data = reac.ary.map{|item| Reac.value(item, tick)}
+    when Cond
+      if Reac.value(reac.cond)
+        reac.data = Reac.value(reac.thenr)
+      elsif reac.elser
+        reac.data = Reac.value(reac.elser)
+      else
+        reac.data = nil
+      end
     else
       raise "must not happen"
     end
   end
-  undef :to_s
-  undef :inspect
-  undef :==
+
+  #TODO: use Struct
 
   class Value < Reac
     def initialize(data)
@@ -80,6 +91,14 @@ class Reac
     attr_accessor :data
     attr_reader :ary
   end
+
+  class Cond < Reac
+    def initialize(cond, thenr, elser=nil)
+      @cond, @thenr, @elser = cond, thenr, elser
+    end
+    attr_accessor :data
+    attr_reader :cond, :thenr, :elser
+  end
 end
 
 # construct reactive value from normal value (or proc)
@@ -92,5 +111,14 @@ def Reac(obj=nil, &block)
     else
       Reac::Value.new(obj)
     end
+  end
+end
+
+# Object#then
+# (n % 3 == 0).then(value)
+# (n % 3 == 0).then(value, value)
+class Object
+  def then(thenr, elser=nil)
+    Reac::Cond.new(self, thenr, elser)
   end
 end
